@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+https://go.microsoft.com/fwlink/?LinkID=208121.
+-->
+<Project>
+  <PropertyGroup>
+    <_PublishTargetUrl>D:\Chetan\RND\AI\Blazor_ImageOverlay\Blazor_ImageOverlay\bin\Release\net8.0\publish\</_PublishTargetUrl>
+    <History>False|2025-09-09T10:28:27.3931430Z;False|2025-09-09T15:58:10.5897997+05:30;True|2025-09-09T15:45:06.9551414+05:30;True|2025-09-09T15:24:19.4998802+05:30;True|2025-09-08T18:34:10.0449835+05:30;True|2025-09-08T18:33:43.6710391+05:30;True|2025-09-07T21:40:04.3225863+05:30;</History>
+    <LastFailureDetails />
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,87 @@
+﻿@page "/Runners"
+@using Blazor_ImageOverlay.Components.Service
+@inject ImageMergeService ImageMerger
+
+@if (mergedImageUrl != null)
+{
+    <img src="@mergedImageUrl" />
+}
+else
+{
+    <p><em>Merging images...</em></p>
+}
+
+@code {
+    private string? mergedImageUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Example image paths (ensure they exist on the server)
+        string basePath = "wwwroot/images/base.jpg";
+        string overlayPath = "wwwroot/images/overlay.png";
+
+        var mergedBytes = ImageMerger.MergeImages(basePath, overlayPath, new System.Drawing.Point(50, 50));
+
+        string base64 = Convert.ToBase64String(mergedBytes);
+        mergedImageUrl = $"data:image/png;base64,{base64}";
+    }
+}
+
+
+@* 
+@if (isAuthenticated)
+{
+    <div class="text-center">
+        <img src="@imageToShow" class="img-fluid" style="max-width: 400px;" />
+        <p class="mt-2 text-muted">
+            You are viewing: <strong>@(isAdmin ? "Original Image (Admin)" : "Overlayed Image (User)")</strong>
+        </p>
+    </div>
+}
+else
+{
+    <p>You must be logged in to view the image.</p>
+}
+
+@code {
+    private string imageToShow = string.Empty;
+    private bool isAdmin = false;
+    private bool isAuthenticated = false;
+
+    // protected override async Task OnInitializedAsync()
+    // {
+    //     var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+    //     var user = authState.User;
+
+    //     isAuthenticated = user.Identity?.IsAuthenticated ?? false;
+
+    //     if (isAuthenticated)
+    //     {
+    //         isAdmin = user.IsInRole("Admin");
+
+    //         imageToShow = isAdmin
+    //             ? "/images/original.jpg"
+    //             : "/images/overlayed.jpg";
+    //     }
+    // }
+
+
+    // private string imageToShow;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity != null && user.Identity.IsAuthenticated)
+        {
+            imageToShow = "images/original.jpg";
+        }
+        else
+        {
+            imageToShow = "images/overlay.jpg";
+        }
+    }
+
+}
+ *@

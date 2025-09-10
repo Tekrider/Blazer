@@ -1,0 +1,167 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Forms
+@inject IWebHostEnvironment Environment
+@inject NavigationManager NavigationManager
+@using Blazor_ImageOverlay.Components.Service
+@using System.Drawing
+@inject ImageService ImageService
+<PageTitle>Image Utility</PageTitle>
+
+<h3>Overlay One Image on Multiple Base Images</h3>
+@* <div class="row">
+    <div class="mb-2">
+        <label><b>Select Base Images (Multiple):</b></label>
+        <InputFile OnChange="OnBaseImagesSelected" multiple />
+    </div>
+
+    <div class="mb-2">
+        <label><b>Select One Overlay Image:</b></label>
+        <InputFile OnChange="OnOverlayImageSelected" />
+    </div>
+</div> *@
+
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label><b>Select Base Images (Multiple):</b></label>
+        <InputFile OnChange="OnBaseImagesSelected" multiple class="form-control" />
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <label><b>Select One Overlay Image:</b></label>
+        <InputFile OnChange="OnOverlayImageSelected" class="form-control" />
+    </div>
+</div>
+
+
+@if (mergedImageUrls.Any())
+{
+    <h4>Merged Images</h4>
+
+    <div class="row">
+        @foreach (var url in mergedImageUrls)
+        {
+            <div class="col-sm-12 col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 shadow-sm text-center p-2">
+                    <img src="@url" class="img-fluid mb-2" style="max-height: 200px; object-fit: contain;" />
+                    <a class="btn btn-primary" href="@url" download>
+                        Download
+                    </a>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+
+@* @if (mergedImageUrls.Any())
+{
+    <h4>Merged Images</h4>
+
+    @foreach (var url in mergedImageUrls)
+    {
+        <div class="mb-3">
+            <img src="@url" style="max-width: 400px;" class="mb-1" />
+            <br />
+            <a class="btn btn-primary" href="@url" download>
+                Download
+            </a>
+        </div>
+    }
+} *@
+
+@code {
+    private List<IBrowserFile> baseImageFiles = new();
+    private IBrowserFile? overlayImageFile;
+    private List<string> mergedImageUrls = new();
+
+    private async Task OnBaseImagesSelected(InputFileChangeEventArgs e)
+    {
+        baseImageFiles = e.GetMultipleFiles().ToList();
+        await TryProcessImages();
+    }
+
+    private async Task OnOverlayImageSelected(InputFileChangeEventArgs e)
+    {
+        overlayImageFile = e.File;
+        await TryProcessImages();
+    }
+
+    private async Task TryProcessImages()
+    {
+        if (baseImageFiles.Count == 0 || overlayImageFile == null)
+            return;
+
+        var uploads = Path.Combine(Environment.WebRootPath, "uploads");
+        Directory.CreateDirectory(uploads);
+
+        // Save overlay image once
+        var overlayPath = Path.Combine(uploads, "overlay.png");
+        await using (var overlayStream = overlayImageFile.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10))
+        await using (var fs = new FileStream(overlayPath, FileMode.Create))
+        {
+            await overlayStream.CopyToAsync(fs);
+        }
+
+        mergedImageUrls.Clear();
+
+        // Process each base image
+        for (int i = 0; i < baseImageFiles.Count; i++)
+        {
+            var baseImage = baseImageFiles[i];
+            var basePath = Path.Combine(uploads, $"base_{i}.png");
+            var mergedPath = Path.Combine(uploads, $"merged_{i}.png");
+
+            // Save base image
+            await using (var baseStream = baseImage.OpenReadStream(maxAllowedSize: 1024 * 1024 * 10))
+            await using (var fs = new FileStream(basePath, FileMode.Create))
+            {
+                await baseStream.CopyToAsync(fs);
+            }
+
+            // Merge
+            MergeImages(basePath, overlayPath, mergedPath);
+
+            // Prepare URL for image
+            var url = $"{NavigationManager.BaseUri}uploads/merged_{i}.png";
+            mergedImageUrls.Add(url);
+        }
+    }
+
+    private void MergeImages(string basePath, string overlayPath, string outputPath)
+    {
+        using var baseImg = new Bitmap(basePath);
+        using var overlayImg = new Bitmap(overlayPath);
+        using var graphics = Graphics.FromImage(baseImg);
+
+        graphics.DrawImage(overlayImg, new Point(0, 0));
+        baseImg.Save(outputPath, System.Drawing.Imaging.ImageFormat.Png);
+    }
+}
+
+
+
+@* 
+@if (mergedImage != null)
+{
+    <img src="@mergedImage" />
+}
+else
+{
+    <button @onclick="Merge">Merge Images</button>
+}
+
+@code {
+    private string? mergedImage;
+
+    private void Merge()
+    {
+        string basePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/base.jpg");
+        string overlayPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/overlay.png");
+
+        var bytes = ImageService.MergeImages(basePath, overlayPath);
+        var base64 = Convert.ToBase64String(bytes);
+        mergedImage = $"data:image/png;base64,{base64}";
+    }
+}
+ *@

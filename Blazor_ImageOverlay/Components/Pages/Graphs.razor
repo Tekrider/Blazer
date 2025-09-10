@@ -1,0 +1,39 @@
+﻿ @page "/Graphs"
+@*<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@using ChartJs.Blazor
+@using ChartJs.Blazor.BarChart
+
+<BarChart Config="@barChartConfig"/>
+
+@code {
+    private BarConfig barChartConfig;
+
+    protected override void OnInitialized()
+    {
+        barChartConfig = new BarConfig
+        {
+            Options = new BarOptions
+            {
+                Responsive = true
+            }
+        };
+
+        barChartConfig.Data.Labels.AddRange(new[] { "Jan", "Feb", "Mar" });
+        var dataset = new BarDataset<int>(new[] { 10, 20, 30 })
+        {
+            Label = "Sales",
+            BackgroundColor = new[] { "red", "blue", "green" }
+        };
+
+        barChartConfig.Data.Datasets.Add(dataset);
+    }
+
+    public void UpdateChart(List<int> newData)
+    {
+        var dataset = (BarDataset<int>)barChartConfig.Data.Datasets.First();
+        dataset.Clear();
+        dataset.AddRange(newData);
+        StateHasChanged(); // Force re-render
+    }
+}
+ *@
